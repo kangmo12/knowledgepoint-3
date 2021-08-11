@@ -96,3 +96,53 @@ const createSDPOffer = async id => {
         })
     })
 }
+const createSDPAnswer = async data => {
+    let displayId = data.displayId;
+
+    peers[displayId] = new RTCPeerConnection();
+    peers[displayId].ontrack = e => {
+        streams[displayId] = e.streams[0];
+
+        let multiVideo = document.getElementById(`multiVideo-${displayId}`);
+        multiVideo.srcObject = streams[displayId];
+    }
+
+    await peers[displayId].setRemoteDescription(data.sdp);
+    let answerSdp = await peers[displayId].createAnswer();
+    await peers[displayId].setLocalDescription(answerSdp);
+    peers[displayId].onicecandidate = e => {
+        if(!e.candidate){
+            let reqData = {
+                "eventOp": "SDP",
+                "sdp": peers[displayId].localDescription,
+                "roomId": data.roomId,
+                "usage": "cam",
+                "pluginId": data.pluginId,
+                "userId": userId
+            };
+
+            sendData(reqData);
+        }
+    }
+}
+
+//퇴장 시, stream,peer 제거
+const leaveParticipant = id => {
+    document.getElementById(`multiVideo-${id}`).remove();
+    document.getElementById(id).remove();
+
+    if(streams[id]){
+        streams[id].getVideoTracks()[0].stop();
+        streams[id].getAudioTracks()[0].stop();
+        streams[id] = null;
+        delete streams[id];
+    }
+
+    if(peers[id]){
+        peers[id].close();
+        peers[id] = null;
+        delete peers[id];
+    }
+
+}
+/버튼 event 작성*/
