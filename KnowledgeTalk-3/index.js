@@ -146,3 +146,70 @@ const leaveParticipant = id => {
 
 }
 /버튼 event 작성*/
+//각 버튼의 이벤트를 모아둔곳
+
+CreateRoomBtn.aaddEventListener('click',()=>{
+    host = true;
+    let data ={
+        "eventOp":"CreateRoom"
+    }
+
+    sendData(data);
+});
+
+RoomJoinBtn.addEventListener('click',()=>{
+    let data ={
+        "eventOp" : "RoomJoinBtn",
+        "roomId" : roomIdInput.value
+    }
+    sendData(data);
+});
+
+SDPBtn.addEventListener('click',async()=> {
+    let sdp = await createSDPOffer(userId);
+
+    let data ={
+        "eventOp":"SDP",
+        "plugin": undefined,
+        "roomid": roomIdInput.value,
+        "sdp" : sdp,
+        "usage" : "cam",
+        "userId" : userId,
+        "host": host
+    }
+    sendData(data);
+})
+
+/* 데이터 받은곳 처리하는 부분*/
+
+clientIo.on("knowledgetalk", async data=>{
+    socketLog('receive',data);
+
+    switch(data.eventOp || data.signalOp){
+        case 'CreateRoom':
+            if(data.code =='200'){
+                CreateRoom(data);
+                CreateRoomBtn.disabled = true;
+            }
+            break;
+    
+
+        case 'RoomJoin':
+            if(data.code =='200'){
+                RoomJoinBtn(data);
+                //버튼 다시 누를수없음
+                RoomJoinBtn.disabled = true; 
+                CreateRoomBtn.disabled = true;
+        }
+        break;
+
+        case 'StartSession':
+            startSession(data);
+            break;
+
+        case 'SDP':
+            if(data.useMediaSvr == 'Y'){
+                if(data.sdp && )
+            }
+        
+});
